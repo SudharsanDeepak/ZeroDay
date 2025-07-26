@@ -80,7 +80,7 @@ const Dashboard = () => {
         <div className="relative z-10 flex items-center justify-center h-full text-center text-white">
           <div className="max-w-3xl mx-auto px-4">
             <h1 className="text-4xl md:text-6xl font-bold mb-4 animate-fade-in">
-              Welcome to CampusLink
+              Welcome to SECEcampus
             </h1>
             <p className="text-xl md:text-2xl opacity-90 animate-slide-in">
               Your centralized hub for campus life and student utilities
