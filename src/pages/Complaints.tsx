@@ -36,7 +36,7 @@ const Complaints = () => {
 }, [name, message, image, userType]);
   const fetchComplaints = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/complaints", {
+      const res = await axios.get("https://campusconnect-r8ka.onrender.com/api/complaints", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setComplaints(res.data);
@@ -58,7 +58,7 @@ const Complaints = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/complaints",
+        "https://campusconnect-r8ka.onrender.com/api/complaints",
         newComplaint,
         {
           headers: {

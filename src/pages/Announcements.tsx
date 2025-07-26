@@ -80,7 +80,7 @@ useEffect(() => {
   const fetchAnnouncements = async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await axios.get('http://localhost:5000/api/announcements', {
+      const res = await axios.get('https://campusconnect-r8ka.onrender.com/api/announcements', {
         headers: { Authorization: `Bearer ${token}` }
       })
       setAnnouncements(res.data)
@@ -150,7 +150,7 @@ useEffect(() => {
   try {
     const token = localStorage.getItem('token')
     const res = await axios.post(
-      'http://localhost:5000/api/announcements',
+      'https://campusconnect-r8ka.onrender.com/api/announcements',
       form,
       {
         headers: {

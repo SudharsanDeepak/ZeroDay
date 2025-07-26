@@ -59,7 +59,7 @@ const TechNews = () => {
   if (imageFile) formData.append('image', imageFile);
 
   try {
-    const res = await fetch('http://localhost:5000/api/technews', {
+    const res = await fetch('https://campusconnect-r8ka.onrender.com/api/technews', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token') || ''}`
@@ -85,7 +85,7 @@ const TechNews = () => {
 useEffect(() => {
   const fetchNews = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/technews', {
+      const res = await fetch('https://campusconnect-r8ka.onrender.com/api/technews', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`
         }

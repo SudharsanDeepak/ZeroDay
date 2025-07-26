@@ -57,7 +57,7 @@ const Skills = () => {
   const token = localStorage.getItem('token'); // Assuming JWT is stored in localStorage
     const fetchSkills = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/skills', {
+      const res = await axios.get('https://campusconnect-r8ka.onrender.com/api/skills', {
         headers: {
           Authorization: `Bearer ${token}`, // 👈 Add this if your backend requires JWT
         },
@@ -96,7 +96,7 @@ const Skills = () => {
     };
 
     try {
-      const res = await axios.post('http://localhost:5000/api/skills', newSkill, {
+      const res = await axios.post('https://campusconnect-r8ka.onrender.com/api/skills', newSkill, {
         headers: {
           Authorization: `Bearer ${token}`, // 👈 Needed if protected
         },

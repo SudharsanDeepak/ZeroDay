@@ -23,7 +23,7 @@ const Timetable = () => {
   // Fetch timetable from backend
   const fetchTimetable = async (dept: string) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/timetable/${dept}`, {
+      const res = await axios.get(`https://campusconnect-r8ka.onrender.com/api/timetable/${dept}`, {
         headers: getAuthHeaders(),
         withCredentials: true, // if your backend uses cookies
       });
@@ -50,7 +50,7 @@ const Timetable = () => {
     if (!newDay.trim() || newSlots.some((slot) => !slot.trim())) return;
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/timetable/${selectedDept}`,
+        `https://campusconnect-r8ka.onrender.com/api/timetable/${selectedDept}`,
         { day: newDay, slots: newSlots },
         { headers: getAuthHeaders(), withCredentials: true }
       );
@@ -75,7 +75,7 @@ const Timetable = () => {
     const row = timetables[selectedDept][editing.row];
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/timetable/${selectedDept}/${encodeURIComponent(row.day)}/${editing.col}`,
+        `https://campusconnect-r8ka.onrender.com/api/timetable/${selectedDept}/${encodeURIComponent(row.day)}/${editing.col}`,
         { value: editValue },
         { headers: getAuthHeaders(), withCredentials: true }
       );

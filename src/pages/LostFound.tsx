@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -10,17 +10,28 @@ import {
   Plus,
   MapPin,
   Calendar,
-  Phone,
   Mail
 } from 'lucide-react'
-import { useEffect } from 'react';
+
+interface LostFoundItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  type: 'lost' | 'found';
+  location: string;
+  date: string;
+  contact: string;
+  phone?: string;
+  reward?: string;
+  image?: string;
+}
 
 const LostFound = () => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [itemType, setItemType] = useState('all')
+  const [itemType, setItemType] = useState<'all' | 'lost' | 'found'>('all')
   const [showModal, setShowModal] = useState(false)
-  const [items, setItems] = useState([]);
-
+  const [items, setItems] = useState<LostFoundItem[]>([])
 
   // Modal form state
   const [form, setForm] = useState({
@@ -57,17 +68,16 @@ const LostFound = () => {
     )
 
   const getCategoryColor = (category: string): "destructive" | "secondary" | "outline" | "default" => {
-    const colors: Record<string, "destructive" | "secondary" | "outline" | "default"> = {
+    const colors = {
       electronics: 'default',
       personal: 'secondary',
       vehicles: 'outline',
       books: 'secondary',
       clothing: 'outline'
-    }
-    return colors[category] || 'default'
+    } as const
+    return colors[category as keyof typeof colors] || 'default'
   }
 
-  // Handle form input changes
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setForm(prev => ({
@@ -76,13 +86,11 @@ const LostFound = () => {
     }))
   }
 
-  // Handle image file selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) setImageFile(file)
   }
 
-  // Add new item (send as FormData)
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.title.trim() || !form.description.trim() || !form.location.trim() || !form.date.trim() || !form.contact.trim()) return
@@ -91,57 +99,69 @@ const LostFound = () => {
     Object.entries(form).forEach(([key, value]) => formData.append(key, value))
     if (imageFile) formData.append('image', imageFile)
 
-    // Example POST request (adjust URL as needed)
-    await fetch('http://localhost:5000/api/lostfound', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        // 'Content-Type': 'multipart/form-data', // DO NOT set this, browser will set it
-        Authorization: `Bearer ${localStorage.getItem('token') || ''}`
-      }
-    })
+    try {
+      const response = await fetch('https://campusconnect-r8ka.onrender.com/api/lostfound', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+        }
+      })
 
-    setShowModal(false)
-    setForm({
-      title: '',
-      description: '',
-      category: 'electronics',
-      type: 'lost',
-      location: '',
-      date: '',
-      contact: '',
-      phone: '',
-      reward: ''
-    })
-    setImageFile(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-const fetchItems = async () => {
-  try {
-    const response = await fetch('http://localhost:5000/api/lostfound', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) throw new Error('Failed to add item')
+      
+      setShowModal(false)
+      setForm({
+        title: '',
+        description: '',
+        category: 'electronics',
+        type: 'lost',
+        location: '',
+        date: '',
+        contact: '',
+        phone: '',
+        reward: ''
+      })
+      setImageFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      fetchItems()
+    } catch (error) {
+      console.error('Error adding item:', error)
     }
-
-    const data = await response.json();
-    setItems(data);
-  } catch (err) {
-    console.error('Failed to fetch items:', err);
   }
-};
 
+  const fetchItems = async () => {
+    try {
+      const response = await fetch('https://campusconnect-r8ka.onrender.com/api/lostfound', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json'
+        }
+      })
 
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
 
-useEffect(() => {
-  fetchItems();
-}, [form]);
+      const data = await response.json()
+      setItems(data)
+    } catch (err) {
+      console.error('Failed to fetch items:', err)
+    }
+  }
+
+  const handleContactOwner = (item: LostFoundItem) => {
+    const subject = `Regarding your ${item.type} item: ${item.title}`
+    const body = `Hello,\n\nI'm contacting you about the ${item.type} item "${item.title}" that you posted on ${new Date(item.date).toLocaleDateString()}.\n\n` +
+                 `Item Description: ${item.description}\n` +
+                 `Location: ${item.location}\n\n` +
+                 `My message:\n\n`
+    
+    window.location.href = `mailto:${item.contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  }
+
+  useEffect(() => {
+    fetchItems()
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -179,7 +199,7 @@ useEffect(() => {
           </div>
 
           {/* Type Tabs */}
-          <Tabs value={itemType} onValueChange={setItemType}>
+          <Tabs value={itemType} onValueChange={(value) => setItemType(value as 'all' | 'lost' | 'found')}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="all">All Items ({items.length})</TabsTrigger>
               <TabsTrigger value="lost">Lost Items ({items.filter(i => i.type === 'lost').length})</TabsTrigger>
@@ -190,14 +210,19 @@ useEffect(() => {
 
         {/* Items Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((item) => (
-            <Card key={item.id} className="overflow-hidden hover:shadow-primary transition-all duration-300">
+  {filteredItems.map((item) => (
+    <Card 
+      key={item.id || `${item.title}-${item.date}-${item.location}`}
+      className="overflow-hidden hover:shadow-primary transition-all duration-300"
+    >
               <div className="aspect-video overflow-hidden">
-                <img 
-                  src={item.image} 
-                  alt={item.title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
+                {item.image && (
+                  <img 
+                    src={item.image} 
+                    alt={item.title}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                )}
               </div>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
@@ -238,7 +263,12 @@ useEffect(() => {
                 </div>
 
                 <div className="space-y-2">
-                  <Button variant="default" className="w-full" size="sm">
+                  <Button 
+                    variant="default" 
+                    className="w-full" 
+                    size="sm"
+                    onClick={() => handleContactOwner(item)}
+                  >
                     <Mail className="h-4 w-4 mr-2" />
                     Contact Owner
                   </Button>
@@ -307,6 +337,7 @@ useEffect(() => {
                       value={form.type}
                       onChange={handleFormChange}
                       className="w-full px-4 py-2 border rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
                     >
                       <option value="lost">Lost</option>
                       <option value="found">Found</option>
@@ -319,6 +350,7 @@ useEffect(() => {
                       value={form.category}
                       onChange={handleFormChange}
                       className="w-full px-4 py-2 border rounded-lg bg-background dark:bg-gray-800 text-foreground dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
                     >
                       <option value="electronics">Electronics</option>
                       <option value="personal">Personal</option>
@@ -364,6 +396,7 @@ useEffect(() => {
                     <label className="block mb-1 font-medium text-foreground dark:text-white">Contact Email</label>
                     <Input
                       name="contact"
+                      type="email"
                       value={form.contact}
                       onChange={handleFormChange}
                       placeholder="Contact email"
